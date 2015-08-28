@@ -1,0 +1,69 @@
+{% load compress %}
+
+
+    <div class="row">
+		<div id="container" class="col-md-12">
+			<canvas id="canvas_pathway" style="width: 100%; height: 100%"></canvas>
+		</div>
+
+    </div>
+
+
+
+{% compress js %}
+	<script src="/static/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="/static/paper-full.min.js"></script>
+	<script type="text/coffeescript" src="/static/pathway-displayer.coffee" > </script>
+	<script>
+	canvas = new window.iEnhancedCanvas(canvas_id="canvas_pathway");
+
+
+	{% for x in times %}
+	p = canvas.new_pathway(id={{forloop.counter}}, title="Title 1", description="Description");
+	compound_list = [
+	    {% for c in compounds %}
+            {id: '{{c.id}}',
+            label: "{{c.label}}",
+            position: {{c.position}},
+            size: {{c.size}},
+            shape: "square",
+            color: ["{{c.color.0}}", "{{c.color.1}}"] },
+		{% endfor %}
+	]
+	p.add_compound_list(compound_list)
+	reaction_list = [ 
+		{% for r in reactions %}
+                    {id: '{{r.id}}',
+                     label: 'label 1 pathway 1',
+                     compound1_id: '{{r.compound1_id}}',
+                     compound2_id: '{{r.compound2_id}}',
+                     type: '{{r.type}}' },
+		{% endfor %}
+		]
+	p.add_reaction_list(reaction_list)
+    {% endfor %}
+
+
+	canvas.setup();
+
+	result = [
+        {% for r in reactions %}
+            {% if r.id|divisibleby:"2" %}
+                {'id': {{forloop.counter}},
+                 'pathway1_id': 0,
+                 'reaction1_id': {{r.id}},
+                 'color1': 'orange',
+                 'pathway2_id': 1,
+                 'reaction2_id': {{r.id}},
+                 'color2': 'blue',
+                },
+            {% endif %}
+        {% endfor %}
+	]
+	canvas.add_result(result)
+	</script>
+
+
+{% endcompress %}
+
+
