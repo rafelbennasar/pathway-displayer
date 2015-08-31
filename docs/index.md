@@ -4,11 +4,6 @@ Table of Contents
 
 * User Guide
     * [Introduction](./user-guide/introduction.md)
-    * [Installation](./user-guide/installation.md)
-    * [Getting Started](./user-guide/getting-started.md)
-    * [FAQ](./user-guide/faq.md)
+    * [Quick start](./user-guide/quickstart.md)
+    * [Examples](./user-guide/examples.md)
 
-* Contributor Guide
-    * [Contributing](./contributor-guide/contributing.md)
-    * [Developing](./contributor-guide/developing.md)
-    * [Authors](./contributor-guide/authors.md)/
