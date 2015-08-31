@@ -19,7 +19,7 @@
 
 
 	{% for x in times %}
-	p = canvas.new_pathway(id={{forloop.counter}}, title="Title 1", description="Description");
+	p = canvas.new_pathway(id={{forloop.counter}}, title="Title 1 long long long long long long long long", description="Description");
 	compound_list = [
 	    {% for c in compounds %}
             {id: '{{c.id}}',

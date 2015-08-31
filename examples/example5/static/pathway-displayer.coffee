@@ -296,9 +296,8 @@ class window.Reaction
 
 class Pathway
 
-  constructor: (@id, @title, @description, @width, @height) ->
+  constructor: (@id, @title, @description) ->
     console.log "[INFO] Initialised pathway #{@id}"
-
     @compounds = {}
     @reactions = {}
     @compound_groups = {}
@@ -310,6 +309,12 @@ class Pathway
 
     @virtual_reactions = {}
     @layer = new paper.Layer()
+
+    text = new paper.PointText(new paper.Point(80, 25), new paper.Size(200, 100));
+    text.justification = 'center';
+    text.fillColor = 'black';
+    text.fontSize = '14px'
+    text.content = @title
 
 
 
@@ -658,7 +663,7 @@ class iEnhancedCanvas
     console.log "[INFO] Adding pathway #{id} (#{width}, #{height})"
     console.log "       Title: #{title}"
     console.log "       Description: #{description}"
-    pathway = new Pathway(id, canvas_id, title, description, width, height)
+    pathway = new Pathway(id, title, description)
     @pathway_list.push(pathway)
     return pathway
 
