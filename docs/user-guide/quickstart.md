@@ -28,19 +28,18 @@ Steps:
 ```javascript
 <script src=""></script>
 ```
-
 1. Declare the variable canvas = iEnhancedCanvas().
 ```javascript
 <canvas id='canvas_pathway'>
 ```
-2. Create N pathways.
+3. Create N pathways.
 ```javascript
 var p1 = canvas.new_pathway(id = 1, title = "Title 1", description = "Description");
 var p2 = canvas.new_pathway(id = 1, title = "Title 2", description = "Description");
 [...]
 var p3 = canvas.new_pathway(id = 1, title = "Title 3", description = "Description");
 ```
-2.1. Add compounds to each pathway.
+4. Add compounds to each pathway.
 ```javascript
     compound_list = [
 
@@ -77,7 +76,7 @@ var p3 = canvas.new_pathway(id = 1, title = "Title 3", description = "Descriptio
     ]
     p1.add_compound_list(compound_list)
     ```
-4. Add reactions to each pathway.
+5. Add reactions to each pathway.
 ```javascript
 reaction_list = [
 
@@ -101,13 +100,11 @@ reaction_list = [
 ]
 p1.add_reaction_list(reaction_list)
 ```
-
-3. Call canvas.setup() functions
+6. Call canvas.setup() functions
 ```javascript
     canvas.setup();
 ```
-
-4. Add alignment results between pathways.
+7. Add alignment results between pathways.
 ```javascript
     canvas.add_result(result)
 ```
