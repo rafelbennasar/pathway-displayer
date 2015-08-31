@@ -11,22 +11,35 @@ A *pathway* has three attributes:
 
 A *compound* has six attributes:
 
-- id: <integer>.
-- label: <string>.
-- position: <tuple: int>. [x, y].
-- size: <tuple: int>. [width, height]
-- shape: <string>. "square" or "circle".
-- color: <tuple: string>. [default, mouseover]
+- id: (integer).
+- label: (string).
+- position: (tuple: int :: (x, y))
+- size: (tuple: int :: (width, height))
+- shape: (string). "square" or "circle"
+- color: (tuple: string :: (default, mouseover))
 
 # How are reactions defined?
 
 A *reaction* has five attributes:
 
-- id: <integer>.
-- label: <string>.
-- compound1_id: <int> ID from the first compound.
-- compound2_id: <int> ID from the second compound.
-- type: <string>. "reversible" or "irreversible".
+- id: (integer).
+- label: (string).
+- compound1_id: (int) ID from the first compound.
+- compound2_id: (int) ID from the second compound.
+- type: (string). "reversible" or "irreversible".
+
+# How are results defined?
+
+A result has three attributes:
+
+- pathway1_id: (integer). ID from the first pathway.
+- pathway2_id: (integer). ID from the second pathway.
+- reaction1_id: (integer). This reaction ID is defined in pathway 1.
+- reaction2_id: (integer). This reaction ID is defined in pathway 2.
+- color1: (string). When it is aligned.
+- color2: (string). When mouseover.
+
+It is possible to link the same reaction with more than one pathway/ reactions.
 
 
 Steps:
@@ -101,12 +114,17 @@ Steps:
     ]
     p1.add_reaction_list(reaction_list)
     ```
+    
 6. Call canvas.setup() functions
+
     ```
         canvas.setup();
     ```
+    
 7. Add alignment results between pathways.
+
     ```
         canvas.add_result(result)
     ```
+    
 
