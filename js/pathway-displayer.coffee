@@ -15,6 +15,15 @@ window.get_m2m_point= (p) ->
   Math.ceil(p/GRID_SIZE) * GRID_SIZE
 
 
+###
+  Compound object.
+  There are two types of compounds objects:
+  a) Normal compound objects. They are created by the user.
+  b) Virtual compound objects. They are created by the system
+     to represent a few normal compounds together. They are
+     identified because they have a negative ID number. There's
+     a counter and it's automatically assigned.
+###
 class window.Compound
 
   constructor: (@id, @label, @description, @position, @size, @shape, @color) ->
@@ -30,16 +39,16 @@ class window.Compound
     [@mx, @my] = [@position[0]+@mw/2, @position[1]+@mh/2]
     @.draw_compound()
 
-#dot = new paper.Path.Circle([@cx, @cy], 2)
-#dot.fillColor = "black"
-
+  ###
+  # function draw_compound.
+  # It draws the compound. The point X, Y defines the center of the shape.
+  ###
   draw_compound: () ->
     if @shape == "circle"
       shape = new paper.Path.Circle(new paper.Point(@cx, @cy), @width)
       shape.fillColor = @color[0];
-    else if @shape == "square" #and @id > 0
-      if @virtual
-# If it is virtual we have to add the border size!
+    else if @shape == "square"
+      if @virtual  # If it is virtual we have to add the border size!
         shape = new paper.Path.Rectangle(new paper.Point(@cx-(@cw/2), @cy-(@ch/2) + 1), new paper.Size(@cw - 1, @ch));
       else
         shape = new paper.Path.Rectangle(new paper.Point(@cx-(@cw/2), @cy-(@ch/2)), new paper.Size(@cw, @ch));
@@ -61,7 +70,14 @@ class window.Compound
       text.fontSize = '9px'
       text.content = @label # @id
 
+  ###
+     function _get_base_coords(layout, D)
+      layout: 1 for north, 2 for east, 3 for south, 4 for west.
+      D: delta distance. Is the distance added as offset after the layout.
 
+     It returns a tuple with a new position (it's like a first leg
+     from the base).
+  ###
   _get_base_coords: (layout, D) ->
     DX = @mw/2
     DY = @mh/2
@@ -80,10 +96,23 @@ class window.Compound
 
 
 
+###
+  Reaction object.
+  There are two types of reactions objects:
+  a) Normal reactions objects. They are created by the user.
+  b) Virtual reactions objects. They are created by the system
+     to represent a few normal reactions together. They are
+     identified because they have a negative ID number. There's
+     a counter and it's automatically assigned.
+
+    All normal reactions are grouped and converted to virtual. Virtual
+    reactions link virtual compounds. In this way, if two or more
+    normal reactions takes the same compound, they are unified and only
+    one virtual reaction is drawn.
+###
 class window.Reaction
 
   constructor: (@id, @label, @compound1, @compound2, @type) ->
-##console.log "Building reaction from:", @compound1, @compound2
     @virtual_reactions = []
     @paths = []
 
@@ -96,8 +125,13 @@ class window.Reaction
   get_paths: () ->
     @paths
 
-
-
+  ###
+    funtion get_coords()
+    It returns a list of positions to define the path of a reaction.
+    This 'path' depends on the relative position of both compounds
+    and if some of the "important" positions are avaliable (if not,
+    we try to assign alternative positions).
+  ###
   @get_coords: (compound1, compound2, map) ->
     B = 1
     [RIGHT, LEFT, DIRECT_RIGHT, DIRECT_LEFT] = [B, B*-1, B*2, B*-2]
@@ -107,6 +141,7 @@ class window.Reaction
     [[p1_x, p1_y], [p1_w, p1_h]] = cmp1
     [[p2_x, p2_y], [p2_w, p2_h]] = cmp2
 
+    # reversed means that the compound 1 and compound 2 were swapped.
     reversed = false
     if p1_w < p2_w and p1_h < p2_h
       [compound1, compound2] = [compound2, compound1]
@@ -114,7 +149,6 @@ class window.Reaction
       [[p1_x, p1_y], [p1_w, p1_h]] = cmp1
       [[p2_x, p2_y], [p2_w, p2_h]] = cmp2
       reversed = true
-
 
     very_tall = p1_h > 10
     very_long = p1_w > 10
@@ -125,7 +159,7 @@ class window.Reaction
 
     if p2_y < L1_y
       if p2_x < L1_x
-#console.log "a"
+        #console.log "a"
         approach = RIGHT
         pos = [1, 2]
         alt_pos = [4, 3]
@@ -137,7 +171,7 @@ class window.Reaction
         #console.log "b"
         pos = [1, 3]
       else if L2_x < p2_x
-#console.log "c"
+        #console.log "c"
         approach = RIGHT
         pos = [1, 4]
         alt_pos = [2, 3]
@@ -146,19 +180,19 @@ class window.Reaction
           pos = [1, 3]
     else if L1_y < p2_y < L2_y
       if p2_x < L1_x
-#console.log "d"
+        #console.log "d"
         approach = DIRECT_RIGHT
         pos = [4, 2]
       else if L1_x < p2_x < L2_x
-##console.log "e"
-# impossible.
+        ##console.log "e"
+        # impossible.
       else if L2_x < p2_x
-#console.log "f"
+        #console.log "f"
         approach = DIRECT_RIGHT
         pos = [2, 4]
     else if L2_y < p2_y
       if p2_x < L1_x
-#console.log "g"
+        #console.log "g"
         approach = LEFT
         pos = [4, 1]
         alt_pos = [3, 2]
@@ -167,11 +201,11 @@ class window.Reaction
           pos = [3, 1]
 
       else if L1_x < p2_x < L2_x
-#console.log "h"
+        #console.log "h"
         approach = DIRECT_BOTTOM
         pos = [3, 1]
       else if L2_x < p2_x
-#console.log "i"
+        #console.log "i"
         approach = LEFT
         pos = [2, 1]
         alt_pos = [3, 4]
@@ -179,11 +213,24 @@ class window.Reaction
           pos = [3, 1]
     [pos1, pos2] = pos
 
+    # First leg: at the 1st compound.
     [sx, sy] = compound1._get_base_coords(pos1, 0)
+    # Second leg: at the 1st compound + 3 units.
     [x1, y1] = compound1._get_base_coords(pos1, 3)
+    # N - 1 leg: at the 2nd compound + 3 units.
     [x8, y8] = compound2._get_base_coords(pos2, 3)
+    # N leg: at the 2nd compound.
     [ex, ey] = compound2._get_base_coords(pos2, 0)
 
+    ###
+     For the alternative position we have two positiblities:
+     - There's alternative positions defined and our first choice
+     is busy, we check if the alternative position is free.
+     - There's alternative positions defined and the intersection
+     between the 2nd leg of both compounds is busy (so, the corner
+     is busy), we try to change for the alternative position and
+     check if the intersection is still busy.
+    ###
     if alt_pos
       [alt_pos1, alt_pos2] = alt_pos
       if (map[x1]? and map[x1][y1]?) # if initial position from node A is busy, set alternative.
@@ -193,7 +240,7 @@ class window.Reaction
           [x1, y1] = [alt_x1, alt_y1]
 
       else if approach == RIGHT and (map[x1]? and map[x1][y8]?) # if corner intersection is busy, set alternative.
-#console.log "ALTERNATIVE CORNER! A"
+        #console.log "ALTERNATIVE CORNER! A"
         [alt_x1, alt_y1] = compound1._get_base_coords(alt_pos1, 3)
         if not (map[alt_x1]? and map[alt_x1][alt_y1]?)
           [sx, sy] = compound1._get_base_coords(alt_pos1, 0)
@@ -206,50 +253,51 @@ class window.Reaction
           [x8, y8] = [alt_x8, alt_y8]
 
       else if (map[x8]? and map[x8][y1]?) # if corner intersection is busy, set alternative.
-#console.log "ALTERNATIVE CORNER! B"
+        #console.log "ALTERNATIVE CORNER! B"
         [alt_x8, alt_y8] = compound2._get_base_coords(alt_pos2, 3)
         if not (map[alt_x8]? and map[alt_x8][alt_y8]?)
           [ex, ey] = compound2._get_base_coords(alt_pos2, 0)
           [x8, y8] = [alt_x8, alt_y8]
 
     if approach == RIGHT
-#console.log " right..."
-#console.log "sx sy", [sx, sy]
-#console.log "x1 y1", [x1, y1]
-#console.log "x1 y8", [x1, y8]
-#console.log "x8 y8", [x8, y8]
-#console.log "ex ey", [ex, ey]
       r = [[sx, sy], [x1, y1], [x1, y8], [x8, y8], [ex, ey]]
       if x8 < ex
         [x8, y8] = [ex, ey]
       r = [[sx, sy], [x1, y1], [x1, y8], [x8, y8], [ex, ey]]
 
     else if approach == LEFT
-#console.log " left..."
+      #console.log " left..."
       if x8 < ex
         [x8, y8] = [ex, ey]
       r = [[sx, sy], [x1, y1], [x8, y1], [x8, y8], [ex, ey]]
 
     else if approach == DIRECT_RIGHT
-#console.log "Direct right..."
+      #console.log "Direct right..."
       r = [[sx, y8], [x1, y8], [x8, y8], [ex, y8]]
     else if approach == DIRECT_LEFT
-#console.log "Direct left..."
+      #console.log "Direct left..."
       r = [[sx, y1], [x1, y1], [x8, y1], [ex, y1]]
     else if approach == DIRECT_BOTTOM
-#console.log "Direct bottom..."
+      #console.log "Direct bottom..."
       r = [[x8, sy], [x8, y1], [x8, y8], [x8, ey]]
     else if approach == DIRECT_TOP
-#console.log "Direct top..."
+      #console.log "Direct top..."
       r = [[x8, sy], [x8, y1], [x8, y8], [x8, ey]]
     return r
 
+###
+  Class pathway:
+
+  It defines each pathway with its reactions, compounds, etc.
+
+  It also have the compound map... where it's controlled which
+  positions are busy or free.
+###
 
 class Pathway
 
-  constructor: (@id, @title, @description, @width, @height) ->
+  constructor: (@id, @title, @description) ->
     console.log "[INFO] Initialised pathway #{@id}"
-
     @compounds = {}
     @reactions = {}
     @compound_groups = {}
@@ -262,14 +310,20 @@ class Pathway
     @virtual_reactions = {}
     @layer = new paper.Layer()
 
+    text = new paper.PointText(new paper.Point(80, 25), new paper.Size(200, 100));
+    text.justification = 'center';
+    text.fillColor = 'black';
+    text.fontSize = '14px'
+    text.content = @title
+
 
 
   ###
-  # get_compound_instance: (compound_id) returns compound_id
-  #
-  # Given a compound_id, we get another compound id. If it is a positive
-  # integer is a 'normal compound'; if it is a negative integer is a
-  # virtual compound that is created from two or more compounds.
+   get_compound_instance: (compound_id) returns compound_id
+
+   Given a compound_id, we get another compound id. If it is a positive
+   integer is a 'normal compound'; if it is a negative integer is a
+   virtual compound that is created from two or more compounds.
   ###
   get_compound_instance: (compound_id) ->
     if @map_compounds[compound_id]?
@@ -288,16 +342,16 @@ class Pathway
         @map[x][y] = compound_id
 
   ###
-  # get_4_neighbors_compound
-  # This function returns the neighbour points for the compound group
-  # generation. So, given a compound_id it returns the N, W, E, S from
-  # that compound (or virtual compound).
-  #
-  #       N
-  #   ---------
-  # W |  cpd  | E
-  #   ---------
-  #       S
+   get_4_neighbors_compound
+   This function returns the neighbour points for the compound group
+   generation. So, given a compound_id it returns the N, W, E, S from
+   that compound (or virtual compound).
+
+         N
+     ---------
+   W |  cpd  | E
+     ---------
+         S
   ###
   get_compound_neighbors: (compound_id) ->
     c_id = @.get_compound_instance(compound_id)
@@ -338,12 +392,20 @@ class Pathway
       return @map[x][y]
 
 
-  build_virtual_compounds: () ->
-    """ In order to build the virtual compounds in two steps:
-      1. build the virtual compounds groups. Which groups we have.
-      2. Later, we
+  ###
+    function build_virtual_compounds()
+    In order to build the virtual compounds in two steps:
+    We take any initial compound and we browse through
+    its connections. Everytime that we cannot access to any
+    new neighbour connected with our initial compound, we
+    created a new group and we take a new compound that has
+    not been analysed previously.
 
-    """
+    Afterwards, for each group we create a virtual compound
+    and we link all the compounds from the group to this
+    new virtual compound.
+  ###
+  build_virtual_compounds: () ->
     pending = Object.keys(@compounds)
 
     c_group = {}
@@ -362,6 +424,10 @@ class Pathway
             c_group[compound_id].push(new_compound)
       pending = (x for x in pending when visited.indexOf(x) == -1 )
 
+
+    # for each group compound, we create a new virtual compound group.
+    # We define the size of this new element with the maximal position
+    # and minimal position reached by their elements.
     [min, max, inf] = [Math.min, Math.max, 32768]
     for compound_id of c_group
       if c_group[compound_id].length > 1
@@ -387,6 +453,9 @@ class Pathway
                         ["red", "blue"])
 
 
+  # internal function to add a new compound. It registers which is the
+  # maximum position reached by a compound to know which is the max
+  # size of the pathway (in order to draw it later on the canvas).
   _add_compound: (compound_id, label, description, position, size, shape, color, virtual=false) ->
     try
       @compounds[compound_id] = new Compound(id=compound_id, label=label, description=description, position=[get_c2m_point(position[0]), get_c2m_point(position[1]) ], size=[get_c2m_point(size[0]), get_c2m_point(size[1])], shape=shape, color=color, path=@path, virtual=virtual)
@@ -402,17 +471,36 @@ class Pathway
       console.log "[ERROR] Trying to add compoound id:", compound_id
       console.log error
 
+  ###
+  function add_compound_list(compound_list)
+
+  Given a list of compounds i's added to a pathway. We also update
+  the map of avaliable postiions and, afterwards, it's also built
+  the virtual compounds.
+  ###
   add_compound_list: (compound_list) ->
     for c in compound_list
       @._add_compound(c.id, c.label, c.description, c.position, c.size, c.shape, c.color)
       @.set_map(c.id)
     @.build_virtual_compounds()
-    console.log "all compounds added... max size was", @max_size_x, @max_size_y
 
+  ###
+    function set_pathway_offsets.
+    Given an offset, the layer is translated (x, y) units.
+
+    This function is used at the end to move each pathway
+    depending on the size of the screen and the numbe rof pathways.
+  ###
   set_pathway_offsets: (x, y) ->
     @layer.translate(x, y)
     @layer.activate()
 
+  ###
+    internal function to add a reaction.
+
+    One single reaction can have more than one reaction associated.
+    A reaction can be between a "real compound" or a "virtual compound".
+  ###
   _add_reaction: (id, label, compound1_id, compound2_id, type) ->
     compound1 = @compounds[compound1_id]
     compound2 = @compounds[compound2_id]
@@ -575,7 +663,7 @@ class iEnhancedCanvas
     console.log "[INFO] Adding pathway #{id} (#{width}, #{height})"
     console.log "       Title: #{title}"
     console.log "       Description: #{description}"
-    pathway = new Pathway(id, canvas_id, title, description, width, height)
+    pathway = new Pathway(id, title, description)
     @pathway_list.push(pathway)
     return pathway
 
