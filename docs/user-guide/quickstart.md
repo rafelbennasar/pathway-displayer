@@ -42,7 +42,7 @@ A result has three attributes:
 It is possible to link the same reaction with more than one pathway/ reactions.
 
 
-Steps:
+# Steps
 
 1. Load the library:
     ```
