@@ -46,7 +46,7 @@ It is possible to link the same reaction with more than one pathway/ reactions.
 
 1. Load the library:
     ```
-    <script src="pathway-displayer.min.js"></script>
+    <script src="pathway-displayer.js"></script>
     ```
 1. Declare the canvas.
     ```
